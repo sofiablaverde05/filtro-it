@@ -153,8 +153,10 @@ export default class Sfx {
         } catch (err) { console.warn("Sfx.file:", url, err); }
     }
 
-    // Intenta tu mp3; si no existe, suena el sonido sintetizado `fallback`.
-    async fileOr(url, fallback, vol = 1) {
+    // Intenta tu mp3; si no existe, suena el sintetizado `fallback`.
+    // opts: { start: segundo donde empieza, dur: maximo de segundos, fade: segundos de salida }.
+    // Un mismo mp3 no se solapa consigo mismo; sfx.stop(url) lo corta (ej. al dejar de sonreir).
+    async fileOr(url, fallback, vol = 1, opts = {}) {
         if (!this.ctx || this.muted) return;
         try {
             if (!this.buffers[url]) {
@@ -162,10 +164,43 @@ export default class Sfx {
                 if (!res.ok) throw new Error(res.status);
                 this.buffers[url] = await this.ctx.decodeAudioData(await res.arrayBuffer());
             }
-            const src = this.ctx.createBufferSource(), g = this.ctx.createGain();
-            src.buffer = this.buffers[url]; g.gain.value = vol;
-            src.connect(g); g.connect(this.master); src.start();
+            this.stop(url);
+            const src = this.ctx.createBufferSource(), g = this.ctx.createGain(), t = this.ctx.currentTime;
+            src.buffer = this.buffers[url];
+            const start = opts.start || 0, dur = Math.min(opts.dur || 1e9, src.buffer.duration - start), fade = Math.min(opts.fade ?? 0.4, dur);
+            g.gain.setValueAtTime(vol, t); g.gain.setValueAtTime(vol, t + dur - fade); g.gain.linearRampToValueAtTime(0.0001, t + dur);
+            src.connect(g); g.connect(this.master); src.start(t, start, dur);
+            (this.playing ||= {})[url] = { src, g };
         } catch { this.play(fallback); }
+    }
+
+    // Musica que, una vez empieza, NO se detiene sola (bucle). Llamarla otra vez no la reinicia.
+    // Se corta con stopAll() (al reiniciar o cambiar de resultado).
+    async music(url, vol = 0.8, fallback = null) {
+        if (!this.ctx || this.muted) return;
+        if (this.playing?.[url] || this._loading === url) return;
+        this._loading = url;
+        try {
+            if (!this.buffers[url]) {
+                const res = await fetch(url);
+                if (!res.ok) throw new Error(res.status);
+                this.buffers[url] = await this.ctx.decodeAudioData(await res.arrayBuffer());
+            }
+            const src = this.ctx.createBufferSource(), g = this.ctx.createGain(), t = this.ctx.currentTime;
+            src.buffer = this.buffers[url]; src.loop = true;
+            g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + 0.6);
+            src.connect(g); g.connect(this.master); src.start(t);
+            (this.playing ||= {})[url] = { src, g };
+        } catch { if (fallback) this.play(fallback); }
+        this._loading = null;
+    }
+
+    stopAll() { for (const url of Object.keys(this.playing || {})) this.stop(url, 0.4); }
+
+    stop(url, fade = 0.25) {
+        const p = this.playing?.[url]; if (!p) return;
+        try { const t = this.ctx.currentTime; p.g.gain.cancelScheduledValues(t); p.g.gain.setValueAtTime(p.g.gain.value, t); p.g.gain.linearRampToValueAtTime(0.0001, t + fade); p.src.stop(t + fade + 0.02); } catch {}
+        delete this.playing[url];
     }
 
     // Risa de payaso malvada (original, sintetizada): "ha-ha-ha-haaa".

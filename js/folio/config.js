@@ -112,3 +112,13 @@ export const GENRES = {
         gestures: [{ event: "browRaise", reward: "Escáner holográfico" }, { event: "eyesWide", reward: "Ojos láser" }],
     },
 };
+
+// Sonidos (mp3) de los generos 2D: [ruta, sonido sintetizado si falta el mp3, "music" (opcional)].
+//  - sin "music": suena una vez cada vez que haces el gesto.
+//  - "music": empieza con el primer gesto y sigue sonando en bucle hasta que reinicias.
+export const SOUND_FILES = {
+    romance_beso:      ["assets/sonidos/romance.mp3", "romance"],
+    romance_guino:     ["assets/sonidos/romance.mp3", "romance"],
+    misterio_lupa:     ["assets/sonidos/misterio.mp3", "misterio", "music"],
+    misterio_sombrero: ["assets/sonidos/misterio.mp3", "misterio", "music"],
+};

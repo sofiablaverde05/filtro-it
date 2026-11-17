@@ -1,1 +1,8 @@
-Pon aqui tus mp3 (ej. it_risa.mp3). Los scripts de las escenas ya apuntan a estos nombres: it_risa.mp3 (terror). Si el archivo no existe, suena el sonido sintetizado.
+Sonidos incluidos:
+  it_risa.mp3          terror: suena al sonreir (primeros 8 s), se corta al dejar de sonreir
+  romance.mp3          romance: una vez por cada beso/guiño
+  ciencia_ficcion.mp3  ciencia ficcion: una vez por cada escaner/laser
+  misterio.mp3         misterio: empieza con el primer guiño/mirada abajo y sigue en bucle
+  fantasia.mp3         fantasia: empieza con la primera sonrisa/soplo y sigue en bucle
+Drama no tiene mp3: usa el sonido sintetizado (pon la ruta en SONIDO del script de mesh_0).
+Las rutas 2D estan en js/folio/config.js (SOUND_FILES); las 3D, en la variable SONIDO de cada script.

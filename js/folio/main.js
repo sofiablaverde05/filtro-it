@@ -46,7 +46,7 @@ export async function startFolio(deps = {}) {
         disposeMask();
         player.stop();
         player.rootNode.clear();
-        look2d = null; particles.clear();
+        look2d = null; particles.clear(); sfx.stopAll();
         if (GENRES[name]?.mode === "2d") { look2d = looks2d[name] || null; return true; }   // sin escena 3D
         let ok = false;
         try {

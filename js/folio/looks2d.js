@@ -1,4 +1,6 @@
 // Animaciones 2D (canvas) para los generos con mode:"2d" en config.js: romance y misterio.
+import { SOUND_FILES } from "./config.js";
+
 // Cada look tiene:
 //   grade()           -> filtro CSS para el video
 //   draw(f, t, dt, P) -> dibuja con f (Face2D) y las particulas P
@@ -54,17 +56,19 @@ const vignette = (ctx, W, H, color, a0, a1) => {
 const ease = (v, target, dt, rate = 8) => v + (target - v) * Math.min(1, dt * rate);
 
 // ---------------------------------------------------------------- ROMANCE
+const snd = (sfx, key) => { const [url, fb, mode] = SOUND_FILES[key]; if (mode === "music") sfx.music(url, 0.8, fb); else sfx.fileOr(url, fb); };
+
 function romance(sfx, faceEvents) {
     let heartEyes = 0, amb = 0;
     return {
         grade: () => "saturate(1.2) sepia(.12) hue-rotate(-8deg) brightness(1.04)",
         on(type, P, f) {
             if (type === "kiss") {
-                sfx.play("romance");
+                snd(sfx, "romance_beso");
                 const m = f.toPx(0, 0.45);
                 for (let i = 0; i < 14; i++) P.add({ x: m.x + (Math.random() - 0.5) * f.u * 0.3, y: m.y, vx: (Math.random() - 0.5) * f.u * 0.9, vy: -f.u * (0.5 + Math.random() * 0.9), g: 0, size: f.u * (0.06 + Math.random() * 0.09), max: 1.6 + Math.random() * 0.8, color: ["#ff4d78", "#ff8fab", "#ffc2d1"][i % 3], rot: (Math.random() - 0.5) * 0.8 });
             }
-            if (type === "wink") { sfx.play("romance"); heartEyes = 1.8; }
+            if (type === "wink") { snd(sfx, "romance_guino"); heartEyes = 1.8; }
         },
         draw(f, t, dt, P, ctx, W, H) {
             amb -= dt; if (amb < 0) { amb = 0.7; P.add({ x: Math.random() * W, y: H + 20, vy: -H * 0.12, vx: (Math.random() - 0.5) * 20, size: 10 + Math.random() * 12, max: 6, color: "rgba(255,120,150,.7)" }); }
@@ -92,8 +96,8 @@ function misterio(sfx, faceEvents, video) {
     return {
         grade: () => "grayscale(.6) sepia(.5) contrast(1.15) brightness(.88)",
         on(type, P, f) {
-            if (type === "wink") { sfx.play("misterio"); lupa = 2.2; side = faceEvents.winkLeft > faceEvents.winkRight ? 1 : -1; }
-            if (type === "lookDown") { sfx.play("misterio"); hatOn = true; }
+            if (type === "wink") { snd(sfx, "misterio_lupa"); lupa = 2.2; side = faceEvents.winkLeft > faceEvents.winkRight ? 1 : -1; }
+            if (type === "lookDown") { snd(sfx, "misterio_sombrero"); hatOn = true; }
             if (type === "lookDownEnd") hatOn = false;
         },
         draw(f, t, dt, P, ctx, W, H) {
