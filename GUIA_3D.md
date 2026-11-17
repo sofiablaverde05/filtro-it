@@ -7,7 +7,7 @@ La página `folio.html` ya está conectada. Tú solo haces **8 escenas en el edi
 | Género | Modo | Qué hace | Archivo |
 |---|---|---|---|
 | Terror | 3D | Tu máscara de payaso (`mesh_0` de tu terror.json). **Al sonreír**: ojos amarillos + risa | `scenes/terror.json` |
-| Drama | 3D | Máscara dorada triste; **al sonreír** cambia a la feliz (al dejar de sonreír vuelve la triste) | `scenes/drama.json` |
+| Drama | 3D | Máscara dorada como textura de `mesh_0` (tu `tristeza.json`); triste al inicio, **al sonreír** cambia a la feliz (al dejar de sonreír vuelve la triste) | `scenes/drama.json` |
 | Fantasía | 3D | Gafas redondas y rayo (tus imágenes). **Sonreír** o **boca en O**: polvo de hadas | `scenes/fantasia.json` |
 | Ciencia ficción | 3D | Visor HUD + anillos. **Cejas arriba**: escáner; **ojos muy abiertos**: pulso láser | `scenes/scifi.json` |
 | Romance | 2D | Rubor, corazones. **Beso**: lluvia de corazones; **guiño**: ojos de corazón | `js/folio/looks2d.js` |
@@ -100,3 +100,8 @@ Están en `js/folio/config.js` → `GENRES[id].gestures = [{ event, reward }]`. 
 ## Limitaciones conocidas
 - Probado con una cara simulada en Chrome headless, **no con webcam real ni en celular**.
 - La selección de tarjetas por inclinación (±10°, 0.8 s) también necesita ajuste con personas reales (`SELECT` en `config.js`).
+
+## Máscara sobre la cara con textura (drama)
+1. La textura es una imagen 1024×1024 con fondo transparente, con la máscara colocada donde el mapa UV pone la cara (`assets/folio/drama_triste_uv.png` y `drama_feliz_uv.png`, misma posición). Los huecos de ojos y boca deben ser transparentes para ver tu cara.
+2. En el editor: `mesh_0` → Material → **Map** = textura triste. El material debe tener *Transparent* activado.
+3. La feliz va como Map de un plano oculto llamado `textura_feliz` (solo la guarda); el script de `mesh_0` cambia `this.material.map` al sonreír (ver `scenes/drama.json`).
