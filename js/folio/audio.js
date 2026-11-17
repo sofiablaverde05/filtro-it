@@ -155,7 +155,7 @@ export default class Sfx {
 
     // Intenta tu mp3; si no existe, suena el sintetizado `fallback`.
     // opts: { start: segundo donde empieza, dur: maximo de segundos, fade: segundos de salida }.
-    // Un mismo mp3 no se solapa consigo mismo; sfx.stop(url) lo corta (ej. al dejar de sonreir).
+    // Un mismo mp3 no se repite mientras suena (una accion = una vez); sfx.stop(url) lo corta (ej. al dejar de sonreir).
     async fileOr(url, fallback, vol = 1, opts = {}) {
         if (!this.ctx || this.muted) return;
         try {
@@ -164,13 +164,14 @@ export default class Sfx {
                 if (!res.ok) throw new Error(res.status);
                 this.buffers[url] = await this.ctx.decodeAudioData(await res.arrayBuffer());
             }
-            this.stop(url);
+            if (this.playing?.[url]) return;   // ya esta sonando: no se reinicia ni se repite
             const src = this.ctx.createBufferSource(), g = this.ctx.createGain(), t = this.ctx.currentTime;
             src.buffer = this.buffers[url];
             const start = opts.start || 0, dur = Math.min(opts.dur || 1e9, src.buffer.duration - start), fade = Math.min(opts.fade ?? 0.4, dur);
             g.gain.setValueAtTime(vol, t); g.gain.setValueAtTime(vol, t + dur - fade); g.gain.linearRampToValueAtTime(0.0001, t + dur);
             src.connect(g); g.connect(this.master); src.start(t, start, dur);
-            (this.playing ||= {})[url] = { src, g };
+            const rec = (this.playing ||= {})[url] = { src, g };
+            src.onended = () => { if (this.playing[url] === rec) delete this.playing[url]; };
         } catch { this.play(fallback); }
     }
 
